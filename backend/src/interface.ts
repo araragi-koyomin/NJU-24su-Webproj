@@ -19,4 +19,12 @@ export interface Projects {
   description: string
   creationTime: string
   status: string
+  tasks: Task[]
+}
+
+export interface Task {
+  name: string
+  description: string
+  comments: string[]
+  label: string
 }
