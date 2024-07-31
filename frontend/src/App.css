@@ -5,3 +5,31 @@
 html, body, #root {
   height: 100%;
 }
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f5f7;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  text-align: center;
+  margin: 20px 0;
+}
+
+div[role="listbox"] {
+  background: #e2e4e6;
+  border-radius: 3px;
+  padding: 8px;
+  width: 250px;
+  margin: 0 auto;
+}
+
+div[role="listitem"] {
+  background: #fff;
+  border-radius: 3px;
+  padding: 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 0 rgba(9,30,66,.25);
+}

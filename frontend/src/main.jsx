@@ -4,13 +4,15 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 import Dashboard from './Dashboard.jsx'
+import Project from './Project.jsx'
 
 const Root = () => {
   return (
     <Router>
       <Routes>
         <Route path='/' element={<App />} />
-        <Route path='/dashBoard' element={<Dashboard />} />
+        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/dashboard/:username/:projectName' element={<Project />} />
       </Routes>
     </Router>
   )

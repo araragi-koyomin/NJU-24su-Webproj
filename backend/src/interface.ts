@@ -1,30 +1,22 @@
-/**
- * @description User-Service parameters
- */
-export interface IUserOptions {
-  uid: number;
-  username: string
-  password: string
-  projects: Projects[]
-}
-
-export interface ILoginResult {
-  success: boolean;
-  message: string;
-  token?: string;
+export interface Task {
+  id: string
+  name: string;
+  description: string;
+  comments: string[];
+  label: string;
 }
 
 export interface Projects {
-  name: string
-  description: string
-  creationTime: string
-  status: string
-  tasks: Task[]
+  name: string;
+  description: string;
+  creationTime: string;
+  status: string;
+  tasks: Task[];
 }
 
-export interface Task {
-  name: string
-  description: string
-  comments: string[]
-  label: string
+export interface IUserOptions {
+  uid: number;
+  username: string;
+  password: string;
+  projects: Projects[];
 }

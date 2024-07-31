@@ -36,6 +36,10 @@ const Dashboard = () => {
     setFilteredProjects(filtered);
   }
 
+  const handleProjectClick = async (projectName) => {
+    navigate(`/dashboard/${username}/${projectName}`);
+  }
+
   return (
     <div className="container mx-auto px-4 sm:px-8 max-w-3xl">
       <div className="py-8">
@@ -89,7 +93,10 @@ const Dashboard = () => {
                 {filteredProjects.map((project, index) => (
                   <tr key={index}>
                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                      <p className="text-gray-900 whitespace-no-wrap">{project.name}</p>
+                      <p className="text-gray-900 whitespace-no-wrap"
+                        key={project.name} onClick={() => handleProjectClick(project.name)}>
+                        {project.name}
+                      </p>
                     </td>
                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                       <p className="text-gray-900 whitespace-no-wrap">{project.description}</p>
