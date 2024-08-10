@@ -23,4 +23,43 @@ export class ProjectService {
     }
     return null;
   }
+
+  async addTask(username: string, projectName: string, taskData: any): Promise<boolean> {
+    const users = this.dataService.loadUsers();
+    const user = users.find(u => u.username === username);
+    if (!user) {
+      console.log('用户未找到');
+      return false;
+    }
+
+    const project = user.projects.find(p => p.name === projectName);
+    if (!project) {
+      console.log('项目未找到');
+      return false;
+    }
+
+    project.tasks.push(taskData);
+    this.dataService.saveUsers(users);
+    return true;
+  }
+
+  async removeTask(username: string, projectName: string, taskId: string): Promise<boolean> {
+    const users = this.dataService.loadUsers();
+    const user = users.find(u => u.username === username);
+    if (!user) {
+      console.log('用户未找到');
+      return false;
+    }
+
+    const project = user.projects.find(p => p.name === projectName);
+    if (!project) {
+      console.log('项目未找到');
+      return false;
+    }
+
+    project.tasks = project.tasks.filter(t => t.id !== taskId);
+
+    this.dataService.saveUsers(users);
+    return true;
+  }
 }

@@ -3,7 +3,7 @@ export interface Task {
   name: string;
   description: string;
   comments: string[];
-  label: string;
+  category: string;
 }
 
 export interface Projects {
