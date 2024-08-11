@@ -14,7 +14,7 @@ const App = () => {
       const response = await axios.post('http://127.0.0.1:7002/user/login', { username, password });
       setMessage(response.data.message);
       if (response.data.success) {
-        navigate('/dashboard', { state: { username, password } });   // 传递username到Dashboard
+        navigate(`/dashboard/${username}`, { state: { username, password } });   // 传递username到Dashboard
       }
     } catch (error) {
       setMessage('登陆失败');

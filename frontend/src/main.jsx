@@ -11,7 +11,7 @@ const Root = () => {
     <Router>
       <Routes>
         <Route path='/' element={<App />} />
-        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/dashboard/:username' element={<Dashboard />} />
         <Route path='/dashboard/:username/:projectName' element={<Project />} />
       </Routes>
     </Router>

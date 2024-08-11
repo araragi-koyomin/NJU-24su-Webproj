@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
-import { comment } from 'postcss';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 const Project = () => {
 
@@ -15,7 +14,8 @@ const Project = () => {
   });
   const [newlyShowModal, setNewlyShowModal] = useState(false);
   const [taskShowModal, setTaskShowModal] = useState(false);
-  const [selectedTask, setSelctedTask] = useState({
+  const [selectedTask, setSelectedTask] = useState({
+    id: '',
     name: '',
     description: '',
     comments: [],
@@ -27,6 +27,14 @@ const Project = () => {
     comments: [],
     category: 'todo'
   })
+  const [newComment, setNewComment] = useState('')
+  const [comments, setComments] = useState([])
+  const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [newDescription, setDescription] = useState('')
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { password } = location.state
+
 
 
   useEffect(() => {
@@ -65,7 +73,7 @@ const Project = () => {
       .catch(error => {
         console.error('Error fetching tasks data:', error);
       });
-  }, [username, projectName]);
+  }, [username, projectName, selectedTask]);
 
   useEffect(() => {
     if (taskShowModal) {
@@ -134,19 +142,103 @@ const Project = () => {
         }
       })
       .catch(e => {
-        console.log('Error deleting task: ', e);
+        console.error('Error deleting task: ', e);
       });
   };
 
   const selectTask = (task) => {
     console.log(task)
-    setSelctedTask(task);
+    setSelectedTask(task);
+    setComments(task.comments);
+    setDescription(task.description);
     setTaskShowModal(true);
   }
 
+  const saveComment = (taskId) => {
+    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}/comments`, {
+      comment: newComment // 确保它是一个字符串
+    })
+      .then(response => {
+        if (response.data.success) {
+          console.log('Add new comment successfully');
+          setComments(prev => [...prev, newComment]);  // 更新前端状态
+          setSelectedTask(prev => ({
+            ...prev,
+            comments: [...prev.comments, newComment]  // 更新选中的任务
+          }));
+          setNewComment('');  // 清空输入框
+        } else {
+          console.log("评论添加失败");
+        }
+      })
+      .catch(e => {
+        console.error('Error adding comment: ', e);
+      });
+  };
+
+  const saveDescription = (taskId) => {
+    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}/description`, {
+      description: newDescription
+    })
+      .then(response => {
+        if (response.data.success) {
+          setSelectedTask(prev => ({
+            ...prev,
+            description: newDescription  // 更新 selectedTask 中的描述
+          }));
+          setIsEditingDescription(false); // 保存后切换回查看模式
+        } else {
+          console.log("更新介绍失败");
+        }
+      })
+      .catch(e => {
+        console.error('Error updating description: ', e);
+      });
+  };
+
+  const handleCategoryChange = (taskId, newCategory) => {
+    console.log('Changing category for task:', taskId, 'to:', newCategory);
+
+    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}/category`, {
+      category: newCategory
+    })
+      .then(response => {
+        if (response.data.success) {
+          console.log('Task category updated successfully!');
+          setSelectedTask(prev => ({
+            ...prev,
+            category: newCategory
+          }));
+        } else {
+          console.log('Failed to update task category');
+        }
+      })
+      .catch(error => {
+        console.error('Error updating task category:', error);
+      });
+  };
+
+  const handleUsernameClick = () => {
+    if (username && password) {
+      navigate(`/dashboard/${username}`, { state: { username, password } });
+    } else {
+      console.error('Username or password is missing');
+    }
+  }
+
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">{projectName}</h1>
+      <div className='flex justify-between'>
+        <h1 className="text-3xl font-bold mb-4 mt-10">{projectName}</h1>
+        {/* <h2 className='text-l font-bold mb-4 mt-10'>{username}</h2> */}
+        <button
+          className="w-12 h-12 bg-blue-500 text-white font-bold rounded-full hover:bg-blue-600"
+          onClick={handleUsernameClick}
+        >
+          {username}
+        </button>
+      </div>
       {project && (
         <div className="mb-8">
           <h2>{project.description}</h2>
@@ -166,7 +258,7 @@ const Project = () => {
                 <div
                   key={task.id}
                   className="bg-gray-100 p-3 rounded flex justify-between items-center shadow">
-                  <p 
+                  <p
                     onClick={() => selectTask(task)}
                   >{task.name}
                   </p>
@@ -182,7 +274,7 @@ const Project = () => {
         ))}
       </div>
 
-      {/* 新建项目 悬浮窗 */}
+      {/* 新建任务 悬浮窗 */}
       {newlyShowModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -223,47 +315,123 @@ const Project = () => {
 
       {/* 项目查看 悬浮窗 */}
       {taskShowModal && selectedTask && (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white p-8 rounded-lg shadow-lg w-2/3 max-w-4xl">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">{selectedTask.name}</h2>
-            <p className="text-sm text-gray-600">{selectedTask.category}</p>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div ref={modalRef} className="bg-white p-8 rounded-lg shadow-lg w-2/3 max-w-4xl h-3/4 overflow-y-auto">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">{selectedTask.name}</h2>
+                <select
+                  className="w-full border border-gray-300 rounded p-2"
+                  value={selectedTask ? selectedTask.category : ''}
+                  onChange={(e) => {
+                    handleCategoryChange(selectedTask.id, e.target.value);
+                  }}
+                >
+                  <option value="todo">Todo</option>
+                  <option value="doing">Doing</option>
+                  <option value="done">Done</option>
+                </select>
+
+              </div>
+              <button
+                className="text-gray-500 hover:text-gray-700"
+                onClick={() => setTaskShowModal(false)}  // 关闭悬浮窗的按钮
+              >
+                关闭
+              </button>
+            </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <div className='flex justify-between items-center'>
+                <h3 className="text-lg font-semibold mb-2">描述</h3>
+                <button
+                  className='text-gray-500 hover:text-gray-700'
+                  onClick={() => setIsEditingDescription(!isEditingDescription)}
+                >
+                  {isEditingDescription ? "取消" : "编辑"}
+                </button>
+              </div>
+              {isEditingDescription ? (
+                <>
+                  <textarea
+                    className='w-full border border-gray-300 rounded p-2'
+                    value={newDescription}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                  <button
+                    className='mt-1 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm'
+                    onClick={() => saveDescription(selectedTask.id)}
+                  >
+                    {console.log(newDescription)}
+                    保存
+                  </button>
+                </>
+              ) : (
+                <p style={{ whiteSpace: 'pre-wrap' }}>{selectedTask.description}</p>
+              )}
+
+            </div>
+
+            {/* Comments */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">评论</h3>
+              <div className='mt-4'>
+                <textarea
+                  className='w-full border border-gray-300 rounded p-2'
+                  placeholder='添加评论'
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                <button
+                  className='mt-1 mb-4 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm'
+                  onClick={() => saveComment(selectedTask.id)}
+                >
+                  保存
+                </button>
+              </div>
+              <ul className="list-disc list-inside space-y-2">
+                {selectedTask.comments.length > 0 ? (
+                  selectedTask.comments.map((comment, index) => (
+                    <li key={index} className="text-gray-700">{comment}</li>
+                  ))
+                ) : (
+                  <li className="text-gray-500">没有评论</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Attachment */}
+            <div className='mb-6'>
+              <div className='flex justify-between items-center'>
+                <h3 className='text-lg font-semibold mb-2'>附件</h3>
+                <label className="cursor-pointer text-gray-500 hover:text-gray-700">
+                  上传
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={null}
+                  />
+                </label>
+                <ul className="list-disc list-inside space-y-2">
+                {selectedTask.attachments?.map((attachment, index) => (
+                  <li key={index} className="flex justify-between items-center">
+                    <span>{attachment.fileName}</span>
+                    <button
+                      className="text-blue-500 hover:text-blue-700"
+                      onClick={() => handleFileDownload(attachment)}
+                    >
+                      下载
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              </div>
+            </div>
           </div>
-          <button
-            className="text-gray-500 hover:text-gray-700"
-            onClick={() => setTaskShowModal(false)}  // 关闭悬浮窗的按钮
-          >
-            关闭
-          </button>
         </div>
-
-        {/* Description */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">描述</h3>
-          <p>{selectedTask.description}</p>
-        </div>
-
-        {/* Comments */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">评论</h3>
-          <ul className="list-disc list-inside space-y-2">
-            {selectedTask.comments.length > 0 ? (
-              selectedTask.comments.map((comment, index) => (
-                <li key={index} className="text-gray-700">{comment}</li>
-              ))
-            ) : (
-              <li className="text-gray-500">没有评论</li>
-            )}
-          </ul>
-        </div>
-
-        {/* 你可以在这里添加更多的元素，如标签、附件等 */}
-      </div>
-    </div>
-  )}
-
+      )}
     </div>
   );
 };

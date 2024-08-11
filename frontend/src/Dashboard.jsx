@@ -6,25 +6,38 @@ const Dashboard = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState([]);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    description: '',
+    creationTime: '',
+    status: '未完成',
+    tasks: []
+  })
+  const [newlyShowModal, setNewlyShowModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { username, password } = location.state; // 从导航状态中获取用户名和密码
+
+  const { username, password } = location.state || {}; // 使用空对象作为默认值
 
   useEffect(() => {
+    if (!username || !password) {
+      // 如果没有用户名或密码，重定向到登录页面
+      navigate('/');
+      return;
+    }
+
     // 使用GET请求和URL参数发送用户名和密码
     axios.get(`http://127.0.0.1:7002/user/info?username=${username}&password=${password}`)
       .then(response => {
         if (response.data.success) {
-          setProjects(response.data.projects)
-          setFilteredProjects(response.data.projects)
+          setProjects(response.data.projects);
+          setFilteredProjects(response.data.projects);
         } else {
-          console.error('用户验证失败:', response.data.message)
-          // navigate('/');
+          console.error('用户验证失败:', response.data.message);
         }
       })
       .catch(error => {
         console.error('获取用户信息时出错:', error);
-        // navigate('/');
       });
   }, [username, password, navigate]);
 
@@ -34,10 +47,43 @@ const Dashboard = () => {
       project.name.includes(searchTerm)
     );
     setFilteredProjects(filtered);
-  }
+  };
 
   const handleProjectClick = async (projectName) => {
-    navigate(`/dashboard/${username}/${projectName}`);
+    navigate(`/dashboard/${username}/${projectName}`, { state: { username, password } });
+  };
+
+  const addProject = () => {
+    setNewlyShowModal(true);
+  };
+
+  const saveProject = () => {
+    const projectData = {
+      ...newProject,
+      creationTime: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' }),
+    }
+
+    axios.post(`http://127.0.0.1:7002/project/${username}/projects`, projectData)
+      .then(response => {
+        if (response.data.success) {
+          console.log("Project saved successfully!"); // 调试信息
+          setProjects(prevProjects => [...prevProjects, projectData]);
+          setFilteredProjects(prevProjects => [...prevProjects, projectData]);
+          setNewProject({
+            name: '',
+            description: '',
+            creationTime: '',
+            status: '未完成',
+            tasks: []
+          });
+          setNewlyShowModal(false);
+        } else {
+          console.log("任务添加失败");
+        }
+      })
+      .catch(error => {
+        console.error('Error saving project: ', error)
+      })
   }
 
   return (
@@ -63,7 +109,10 @@ const Dashboard = () => {
             </div>
           </form>
           <div className="flex justify-end w-full">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <button 
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              onClick={() => addProject()}
+            >
               创建新项目
             </button>
           </div>
@@ -117,6 +166,45 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* 新建项目 悬浮窗 */}
+      {newlyShowModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">创建新项目</h2>
+            <label className="block mb-2">
+              项目名称:
+              <input
+                type="text"
+                className="border p-2 w-full"
+                value={newProject.name}
+                onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+              />
+            </label>
+            <label className="block mb-2">
+              描述:
+              <input
+                type="text"
+                className="border p-2 w-full"
+                value={newProject.description}
+                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+              />
+            </label>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                onClick={saveProject}>
+                保存任务
+              </button>
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                onClick={() => setNewlyShowModal(false)}>
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

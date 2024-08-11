@@ -10,6 +10,19 @@ export class ProjectController {
   @Inject()
   projectService: ProjectService
 
+  @Post('/:username/projects')
+  async addProject(
+    @Param('username') username: string,
+    @Body() projectData: any
+  ) {
+    const result = await this.projectService.addProject(username, projectData);
+    if (result) {
+      return { success: true, message: 'Project added successfully' };
+    } else {
+      return { success: true, message: 'Failed to add project' }
+    }
+  }
+
   @Get('/:username/:projectName')
   async getProject(@Param('username') username: string, @Param('projectName') projectName: string) {
     try {
@@ -58,7 +71,7 @@ export class ProjectController {
 
   @Del('/:username/:projectName/tasks/:taskId')
   async removeTask(
-    @Param('username') username: string, 
+    @Param('username') username: string,
     @Param('projectName') projectName: string,
     @Param('taskId') taskId: string
   ) {
@@ -67,6 +80,51 @@ export class ProjectController {
       return { success: true };
     } else {
       return { success: false, message: 'Failed to delete task' };
+    }
+  }
+
+  @Post('/:username/:projectName/tasks/:taskId/comments')
+  async addComment(
+    @Param('username') username: string,
+    @Param('projectName') projectName: string,
+    @Param('taskId') taskId: string,
+    @Body('comment') comment: string
+  ) {
+    const result = await this.projectService.addComment(username, projectName, taskId, comment);
+    if (result) {
+      return { success: true, message: 'Comment added successfully' };
+    } else {
+      return { success: true, message: 'Failed to add comment' };
+    }
+  }
+
+  @Post('/:username/:projectName/tasks/:taskId/description')
+  async updateDescription(
+    @Param('username') username: string,
+    @Param('projectName') projectName: string,
+    @Param('taskId') taskId: string,
+    @Body('description') description: string,
+  ) {
+    const result = await this.projectService.updateDescription(username, projectName, taskId, description);
+    if (result) {
+      return { success: true, message: 'Description updated successfully' };
+    } else {
+      return { success: true, message: 'Failed to update description' };
+    }
+  }
+
+  @Post('/:username/:projectName/tasks/:taskId/category')
+  async updateTaskCategory(
+    @Param('username') username: string,
+    @Param('projectName') projectName: string,
+    @Param('taskId') taskId: string,
+    @Body('category') category: string,
+  ) {
+    const result = await this.projectService.updateTaskCategory(username, projectName, taskId, category);
+    if (result) {
+      return { success: true, message: 'Category updated successfully' };
+    } else {
+      return { success: true, message: 'Failed to update category' };
     }
   }
 }

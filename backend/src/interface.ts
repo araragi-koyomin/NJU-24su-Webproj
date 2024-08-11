@@ -4,6 +4,7 @@ export interface Task {
   description: string;
   comments: string[];
   category: string;
+  attachments?: Attachment[]
 }
 
 export interface Projects {
@@ -19,4 +20,10 @@ export interface IUserOptions {
   username: string;
   password: string;
   projects: Projects[];
+}
+
+export interface Attachment {
+  filename: string,
+  url: string
+  uploadAt: string;
 }
