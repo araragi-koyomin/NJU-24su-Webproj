@@ -1,11 +1,18 @@
-import { Controller, Get, Param, Inject, Post, Body, Del } from '@midwayjs/core';
+import { Controller, Get, Param, Inject, Post, Body, Del, File } from '@midwayjs/core';
+// import { UploadService } from '@midwayjs/upload';
+import { Context } from '@midwayjs/koa'
 import { DataService } from '../service/data.service';
 import { ProjectService } from '../service/project.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Controller('/project')
 export class ProjectController {
   @Inject()
   dataService: DataService
+
+  @Inject()
+  ctx: Context
 
   @Inject()
   projectService: ProjectService
@@ -113,18 +120,69 @@ export class ProjectController {
     }
   }
 
-  @Post('/:username/:projectName/tasks/:taskId/category')
-  async updateTaskCategory(
+  @Post('/:username/:projectName/tasks/:taskId/attachments')
+async uploadAttachment(
+  @Param('username') username: string,
+  @Param('projectName') projectName: string,
+  @Param('taskId') taskId: string,
+  @File() file: any  // 使用 @File 装饰器
+) {
+  console.log('Received file:', file);  // 确认 file 是否正确接收
+
+  if (!file) {
+    console.error('No files uploaded');
+    return { success: false, message: 'No files uploaded' };
+  }
+
+  const uploadDir = path.join(__dirname, '../public/uploads', username, projectName, taskId);
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const filePath = path.join(uploadDir, file.filename);
+
+  try {
+    // 将文件从临时路径复制到最终目标路径
+    fs.copyFileSync(file.data, filePath);  // 注意参数的顺序：源 -> 目标
+    
+    // 在数据库中记录文件信息
+    await this.projectService.addAttachment(username, projectName, taskId, {
+      filename: file.filename,
+      url: `/uploads/${username}/${projectName}/${taskId}/${file.filename}`,
+      uploadAt: new Date().toISOString(),
+    });
+
+    return { success: true, message: 'File uploaded successfully' };
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    return { success: false, message: 'File upload failed' };
+  }
+}
+
+
+
+
+
+  @Get('/:username/:projectName/tasks/:taskId/attachments/:filename')
+  async downloadAttachment(
     @Param('username') username: string,
     @Param('projectName') projectName: string,
     @Param('taskId') taskId: string,
-    @Body('category') category: string,
+    @Param('filename') filename: string
   ) {
-    const result = await this.projectService.updateTaskCategory(username, projectName, taskId, category);
-    if (result) {
-      return { success: true, message: 'Category updated successfully' };
+    const filePath = path.join(__dirname, '../public/uploads', username, projectName, taskId, filename);
+
+    if (fs.existsSync(filePath)) {
+      console.log(`Downloading file from: ${filePath}`);
+      this.ctx.set('Content-Disposition', `attachment; filename=${filename}`);
+      this.ctx.type = 'application/octet-stream'; // 设置响应类型
+      this.ctx.body = fs.createReadStream(filePath); // 以流的方式返回文件内容
     } else {
-      return { success: true, message: 'Failed to update category' };
+      console.error(`File not found: ${filePath}`);
+      return {
+        success: false,
+        message: 'File not found'
+      };
     }
   }
 }

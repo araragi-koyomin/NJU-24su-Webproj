@@ -1,6 +1,9 @@
 import { Provide, Inject } from '@midwayjs/decorator';
-import { Projects, Task } from '../interface'; // 只导入必要的接口
+import { Projects, Task, Attachment  } from '../interface'; // 只导入必要的接口
 import { DataService } from './data.service';
+// import { MidwayUploadedFile } from '@midwayjs/upload';
+// import * as fs from 'fs';
+// import * as path from 'path';
 
 @Provide()
 export class ProjectService {
@@ -148,6 +151,38 @@ export class ProjectService {
 
     task.category = category;
     this.dataService.saveUsers(users);
+    return true;
+  }
+
+  // 添加附件信息
+  async addAttachment(username: string, projectName: string, taskId: string, attachment: Attachment): Promise<boolean> {
+    const users = this.dataService.loadUsers();
+    const user = users.find(u => u.username === username);
+    if (!user) {
+      console.log('用户未找到');
+      return false;
+    }
+
+    const project = user.projects.find(p => p.name === projectName);
+    if (!project) {
+      console.log('项目未找到');
+      return false;
+    }
+
+    const task = project.tasks.find(t => t.id === taskId);
+    if (!task) {
+      console.log('任务未找到');
+      return false;
+    }
+
+    // 确保附件列表存在
+    if (!task.attachments) {
+      task.attachments = [];
+    }
+
+    // 添加附件信息到任务的附件列表中
+    task.attachments.push(attachment);
+    this.dataService.saveUsers(this.dataService.users);
     return true;
   }
 }

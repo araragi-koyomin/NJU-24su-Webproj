@@ -4,12 +4,15 @@ import * as validate from '@midwayjs/validate';
 import * as info from '@midwayjs/info';
 import { join } from 'path';
 import { ReportMiddleware } from './middleware/report.middleware';
-import * as cors from '@koa/cors';
+import cors from '@koa/cors';
+import * as upload from '@midwayjs/upload';
+import koaStatic from 'koa-static';
 
 @Configuration({
   imports: [
     koa,
     validate,
+    upload,
     {
       component: info,
       enabledEnvironment: ['local'],
@@ -30,5 +33,8 @@ export class MainConfiguration {
       origin: '*',
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     }));
+
+    // Serve static files
+    this.app.use(koaStatic(join(__dirname, '/public')));
   }
 }

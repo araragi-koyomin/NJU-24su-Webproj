@@ -34,7 +34,8 @@ const Project = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { password } = location.state
-
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
 
   useEffect(() => {
@@ -226,6 +227,68 @@ const Project = () => {
     }
   }
 
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    console.log('Selected file:', file);  // 打印选择的文件信息
+    console.log('FormData:', formData);  // 打印FormData对象以确保文件已正确添加
+
+    setUploading(true);
+
+    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${selectedTask.id}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+      .then(response => {
+        console.log('Request headers:', response.config.headers); // 打印请求头
+        if (response.data.success) {
+          console.log('File uploaded successfully!');
+          setSelectedTask(prev => ({
+            ...prev,
+            attachments: [...prev.attachments, {
+              filename: file.name,
+              url: response.data.url,
+              uploadAt: new Date().toISOString(),
+            }]
+          }));
+          setUploading(false);
+        } else {
+          console.error('Failed to upload file');
+          setUploadError('Failed to upload file');
+          setUploading(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error uploading file:', error);
+        setUploadError('Error uploading file');
+        setUploading(false);
+      });
+  };
+
+  const handleFileDownload = (attachment) => {
+    // 对每一部分路径进行编码
+    const encodedUsername = encodeURIComponent(username);
+    const encodedProjectName = encodeURIComponent(projectName);
+    const encodedTaskId = encodeURIComponent(selectedTask.id);
+    const encodedFilename = encodeURIComponent(attachment.filename);
+
+    // 构建并清理URL
+    const url = `/uploads/${encodedUsername}/${encodedProjectName}/${encodedTaskId}/${encodedFilename}`;
+    const cleanUrl = url.replace(/\/+/g, '/');
+
+    // 创建一个隐藏的链接来触发下载
+    const link = document.createElement('a');
+    link.href = `http://127.0.0.1:7002${cleanUrl}`;
+    link.download = attachment.filename;
+    link.click();
+  };
+
+
+
+
 
   return (
     <div className="container mx-auto p-4">
@@ -411,13 +474,17 @@ const Project = () => {
                   <input
                     type="file"
                     className="hidden"
-                    onChange={null}
+                    onChange={handleFileUpload}
+                    disabled={uploading}  // 在上传中禁用上传按钮
                   />
                 </label>
-                <ul className="list-disc list-inside space-y-2">
+                {uploading && <p>Uploading...</p>}
+                {uploadError && <p className="text-red-500">{uploadError}</p>}
+              </div>
+              <ul className="list-disc list-inside space-y-2">
                 {selectedTask.attachments?.map((attachment, index) => (
                   <li key={index} className="flex justify-between items-center">
-                    <span>{attachment.fileName}</span>
+                    <span>{attachment.filename}</span>
                     <button
                       className="text-blue-500 hover:text-blue-700"
                       onClick={() => handleFileDownload(attachment)}
@@ -427,7 +494,6 @@ const Project = () => {
                   </li>
                 ))}
               </ul>
-              </div>
             </div>
           </div>
         </div>
