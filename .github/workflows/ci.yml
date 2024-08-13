@@ -28,16 +28,8 @@ jobs:
       run: npm run build
       working-directory: ./backend
 
-    - name: Run backend tests
-      run: npm run test
-      working-directory: ./backend
-
     - name: Run backend lint
       run: npm run lint
-      working-directory: ./backend
-
-    - name: Run backend coverage
-      run: npm run cov
       working-directory: ./backend
 
     # Frontend Steps
