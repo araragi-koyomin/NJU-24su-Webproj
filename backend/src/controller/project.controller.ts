@@ -120,44 +120,60 @@ export class ProjectController {
     }
   }
 
+  @Post('/:username/:projectName/tasks/:taskId/category')
+  async updateTaskCategory(
+    @Param('username') username: string,
+    @Param('projectName') projectName: string,
+    @Param('taskId') taskId: string,
+    @Body('category') category: string,
+  ) {
+    const result = await this.projectService.updateTaskCategory(username, projectName, taskId, category);
+    if (result) {
+      return { success: true, message: 'Category updated successfully' };
+    } else {
+      return { success: false, message: 'Failed to update category' };
+    }
+  }
+
+
   @Post('/:username/:projectName/tasks/:taskId/attachments')
-async uploadAttachment(
-  @Param('username') username: string,
-  @Param('projectName') projectName: string,
-  @Param('taskId') taskId: string,
-  @File() file: any  // 使用 @File 装饰器
-) {
-  console.log('Received file:', file);  // 确认 file 是否正确接收
+  async uploadAttachment(
+    @Param('username') username: string,
+    @Param('projectName') projectName: string,
+    @Param('taskId') taskId: string,
+    @File() file: any  // 使用 @File 装饰器
+  ) {
+    console.log('Received file:', file);  // 确认 file 是否正确接收
 
-  if (!file) {
-    console.error('No files uploaded');
-    return { success: false, message: 'No files uploaded' };
+    if (!file) {
+      console.error('No files uploaded');
+      return { success: false, message: 'No files uploaded' };
+    }
+
+    const uploadDir = path.join(__dirname, '../public/uploads', username, projectName, taskId);
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, file.filename);
+
+    try {
+      // 将文件从临时路径复制到最终目标路径
+      fs.copyFileSync(file.data, filePath);  // 注意参数的顺序：源 -> 目标
+
+      // 在数据库中记录文件信息
+      await this.projectService.addAttachment(username, projectName, taskId, {
+        filename: file.filename,
+        url: `/uploads/${username}/${projectName}/${taskId}/${file.filename}`,
+        uploadAt: new Date().toISOString(),
+      });
+
+      return { success: true, message: 'File uploaded successfully' };
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      return { success: false, message: 'File upload failed' };
+    }
   }
-
-  const uploadDir = path.join(__dirname, '../public/uploads', username, projectName, taskId);
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const filePath = path.join(uploadDir, file.filename);
-
-  try {
-    // 将文件从临时路径复制到最终目标路径
-    fs.copyFileSync(file.data, filePath);  // 注意参数的顺序：源 -> 目标
-    
-    // 在数据库中记录文件信息
-    await this.projectService.addAttachment(username, projectName, taskId, {
-      filename: file.filename,
-      url: `/uploads/${username}/${projectName}/${taskId}/${file.filename}`,
-      uploadAt: new Date().toISOString(),
-    });
-
-    return { success: true, message: 'File uploaded successfully' };
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    return { success: false, message: 'File upload failed' };
-  }
-}
 
 
 
