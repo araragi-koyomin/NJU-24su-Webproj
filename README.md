@@ -1,5 +1,7 @@
 ## 任物语
 
+仓库地址：https://github.com/araraki-koyomin/NJU-24su-Webproj
+
 ### 1. 项目简介
 
 *此项目是南京大学2024暑校**Web开发**的大作业。*
