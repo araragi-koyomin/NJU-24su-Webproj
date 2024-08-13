@@ -19,14 +19,40 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
+    # Backend Steps
+    - name: Install backend dependencies
       run: npm install
       working-directory: ./backend
 
-    - name: Run tests
-      run: npm test
+    - name: Build backend project
+      run: npm run build
       working-directory: ./backend
 
-    - name: Build frontend
+    - name: Run backend tests
+      run: npm run test
+      working-directory: ./backend
+
+    - name: Run backend lint
+      run: npm run lint
+      working-directory: ./backend
+
+    - name: Run backend coverage
+      run: npm run cov
+      working-directory: ./backend
+
+    # Frontend Steps
+    - name: Install frontend dependencies
+      run: npm install
+      working-directory: ./frontend
+
+    - name: Lint frontend code
+      run: npm run lint
+      working-directory: ./frontend
+
+    - name: Build frontend project
       run: npm run build
+      working-directory: ./frontend
+
+    - name: Preview frontend build
+      run: npm run preview
       working-directory: ./frontend
