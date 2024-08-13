@@ -5,7 +5,7 @@ import * as path from 'path';
 
 @Provide()
 export class DataService {
-  private usersFilePath = path.join(__dirname, process.env.NODE_ENV === 'production' ? '../data/user.json' : '../../src/data/user.json');
+  private usersFilePath = path.join(__dirname, '../data/user.json');
 
   public users: IUserOptions[] = [];
 

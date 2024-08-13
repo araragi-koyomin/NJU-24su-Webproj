@@ -1,6 +1,8 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "bin": "dist/bootstrap.js", 
+  "main": "dist/bootstrap.js",
   "description": "",
   "private": true,
   "dependencies": {
@@ -38,7 +40,7 @@
     "node": ">=12.0.0"
   },
   "scripts": {
-    "start": "NODE_ENV=production node ./bootstrap.js",
+    "start": "node dist/bootstrap.js",
     "dev": "cross-env NODE_ENV=local mwtsc --watch --run @midwayjs/mock/app.js",
     "test": "cross-env NODE_ENV=unittest jest",
     "cov": "jest --coverage",
