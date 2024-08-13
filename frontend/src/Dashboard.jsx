@@ -27,7 +27,7 @@ const Dashboard = () => {
     }
 
     // 使用GET请求和URL参数发送用户名和密码
-    axios.get(`http://127.0.0.1:7002/user/info?username=${username}&password=${password}`)
+    axios.get(`http://127.0.0.1:7003/user/info?username=${username}&password=${password}`)
       .then(response => {
         if (response.data.success) {
           setProjects(response.data.projects);
@@ -53,6 +53,10 @@ const Dashboard = () => {
     navigate(`/dashboard/${username}/${projectName}`, { state: { username, password } });
   };
 
+  const handleLogout = async () => {
+    navigate(`/`);
+  }
+
   const addProject = () => {
     setNewlyShowModal(true);
   };
@@ -63,7 +67,7 @@ const Dashboard = () => {
       creationTime: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' }),
     }
 
-    axios.post(`http://127.0.0.1:7002/project/${username}/projects`, projectData)
+    axios.post(`http://127.0.0.1:7003/project/${username}/projects`, projectData)
       .then(response => {
         if (response.data.success) {
           console.log("Project saved successfully!"); // 调试信息
@@ -90,8 +94,14 @@ const Dashboard = () => {
     <div className="container mx-auto px-4 sm:px-8 max-w-3xl">
       <div className="py-8">
         {/* 用户名及其他信息 */}
-        <div>
+        <div className='flex justify-between items-center'>
           <h2 className="text-2xl font-semibold leading-tight">{username}</h2>
+          <button
+            className="text-gray-500 hover:text-gray-700"
+            onClick={() => handleLogout()}  // 关闭悬浮窗的按钮
+          >
+            退出登录
+          </button>
         </div>
 
         {/* 搜索栏 */}
@@ -109,7 +119,7 @@ const Dashboard = () => {
             </div>
           </form>
           <div className="flex justify-end w-full">
-            <button 
+            <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={() => addProject()}
             >

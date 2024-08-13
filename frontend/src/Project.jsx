@@ -39,7 +39,7 @@ const Project = () => {
 
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:7002/project/${username}/${projectName}`)
+    axios.get(`http://127.0.0.1:7003/project/${username}/${projectName}`)
       .then(response => {
         if (response.data.success) {
           setProject(response.data.project);
@@ -51,7 +51,7 @@ const Project = () => {
         console.error('Error fetching project data:', error);
       });
 
-    axios.get(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks`)
+    axios.get(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks`)
       .then(response => {
         if (response.data.success) {
           const tasks = response.data.tasks.map(task => ({
@@ -105,7 +105,7 @@ const Project = () => {
       id: Date.now().toString() // todo: 修改id方法
     }
 
-    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks`, taskData)
+    axios.post(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks`, taskData)
       .then(response => {
         if (response.data.success) {
           console.log("Task saved successfully!"); // 调试信息
@@ -130,7 +130,7 @@ const Project = () => {
   }
 
   const removeTask = (category, taskId) => {
-    axios.delete(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}`)
+    axios.delete(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks/${taskId}`)
       .then(response => {
         if (response.data.success) {
           console.log("Task delteted successfully!");
@@ -156,7 +156,7 @@ const Project = () => {
   }
 
   const saveComment = (taskId) => {
-    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}/comments`, {
+    axios.post(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks/${taskId}/comments`, {
       comment: newComment // 确保它是一个字符串
     })
       .then(response => {
@@ -178,7 +178,7 @@ const Project = () => {
   };
 
   const saveDescription = (taskId) => {
-    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}/description`, {
+    axios.post(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks/${taskId}/description`, {
       description: newDescription
     })
       .then(response => {
@@ -200,7 +200,7 @@ const Project = () => {
   const handleCategoryChange = (taskId, newCategory) => {
     console.log('Changing category for task:', taskId, 'to:', newCategory);
 
-    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${taskId}/category`, {
+    axios.post(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks/${taskId}/category`, {
       category: newCategory
     })
       .then(response => {
@@ -237,7 +237,7 @@ const Project = () => {
 
     setUploading(true);
 
-    axios.post(`http://127.0.0.1:7002/project/${username}/${projectName}/tasks/${selectedTask.id}/attachments`, formData, {
+    axios.post(`http://127.0.0.1:7003/project/${username}/${projectName}/tasks/${selectedTask.id}/attachments`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -248,7 +248,7 @@ const Project = () => {
           console.log('File uploaded successfully!');
           setSelectedTask(prev => ({
             ...prev,
-            attachments: [...prev.attachments, {
+            attachments: [...(prev.attachments || []), {
               filename: file.name,
               url: response.data.url,
               uploadAt: new Date().toISOString(),
@@ -281,7 +281,7 @@ const Project = () => {
 
     // 创建一个隐藏的链接来触发下载
     const link = document.createElement('a');
-    link.href = `http://127.0.0.1:7002${cleanUrl}`;
+    link.href = `http://127.0.0.1:7003${cleanUrl}`;
     link.download = attachment.filename;
     link.click();
   };

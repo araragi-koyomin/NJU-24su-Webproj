@@ -6,12 +6,19 @@ const App = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [registerShowModal, setRegisterShowModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    uid: '',
+    username: '',
+    password: '',
+    projects: []
+  })
   const navigate = useNavigate();
 
   const handleLogin = async (event) => {
     event.preventDefault(); // 阻止表单的默认提交行为
     try {
-      const response = await axios.post('http://127.0.0.1:7002/user/login', { username, password });
+      const response = await axios.post('http://127.0.0.1:7003/user/login', { username, password });
       setMessage(response.data.message);
       if (response.data.success) {
         navigate(`/dashboard/${username}`, { state: { username, password } });   // 传递username到Dashboard
@@ -20,6 +27,37 @@ const App = () => {
       setMessage('登陆失败');
     }
   };
+
+  const saveUser = () => {
+    const userData = {
+      ...newUser,
+      id: Date.now().toString() // todo: 修改id方法
+    }
+
+    axios.post(`http://127.0.0.1:7003/user/register`, userData)
+      .then(response => {
+        if (response.data.success) {
+          console.log("User added successfully!");
+          console.log("Saved users:", response.data.users);  // 打印保存的用户数据
+          setRegisterShowModal(false);
+          setNewUser({
+            uid: '',
+            username: '',
+            password: '',
+            projects: []
+          });
+        } else {
+          console.log("用户添加失败");
+        }
+      })
+      .catch(error => {
+        console.error('Error add user: ', error)
+      })
+  }
+
+  const addUser = () => {
+    setRegisterShowModal(true);
+  }
 
   return (
     <div className="flex items-center justify-center h-full">
@@ -81,10 +119,59 @@ const App = () => {
                 Sign in
               </button>
             </div>
+            {/* 注册账号 */}
+            <div>
+              <button
+                type='button'
+                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                onClick={() => addUser()}
+              >
+                Register
+              </button>
+            </div>
           </form>
           {message && <p>{message}</p>}
         </div>
       </div>
+
+      {/* 注册账号 悬浮窗 */}
+      {registerShowModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">注册账号</h2>
+            <label className="block mb-2">
+              用户名:
+              <input
+                type="text"
+                className="border p-2 w-full"
+                value={newUser.username}
+                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+              />
+            </label>
+            <label className="block mb-2">
+              密码:
+              <input
+                type="text"
+                className="border p-2 w-full"
+                value={newUser.password}
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              />
+            </label>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                onClick={saveUser}>
+                注册
+              </button>
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                onClick={() => setRegisterShowModal(false)}>
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
